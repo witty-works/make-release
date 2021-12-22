@@ -90,7 +90,7 @@ case $1 in
             exit;
         fi
 
-        MODE=${BASH_REMATCH[1]};
+        TYPE=${BASH_REMATCH[1]};
         VERSION=${BASH_REMATCH[2]};
 
         set -x
