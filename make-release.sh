@@ -5,7 +5,8 @@ set -e;
 VERSION_REGEXP='([0-9]+)\.([0-9]+)\.([0-9]+)';
 
 VERSION_FILENAME=$(sed -n '1p' make-release)
-SENTRY_SLUG=$(sed -n '2p' make-release)
+SENTRY_ORG=$(sed -n '2p' make-release)
+SENTRY_SLUG=$(sed -n '3p' make-release)
 
 case $1 in
     major|minor|patch|hotfix)
@@ -69,7 +70,7 @@ case $1 in
         if [ ! -z "$SENTRY_SLUG" ]
         then
             set -x
-            sentry-cli releases new -p $SENTRY_SLUG $VERSION;
+            sentry-cli releases -o $SENTRY_ORG new -p $SENTRY_SLUG $VERSION;
             set +x
         fi
         set -x

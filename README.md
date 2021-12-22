@@ -19,12 +19,14 @@ sudo ln -s ../make-release/make-release.sh /usr/local/bin/make-release.s
 Add a "make-release" file into each repository where you want to use make-release.sh with the following contents:
 
 * line 1 (version file name): The file name where the version number is tracked
-* line 2 (sentry slug): Name of the sentry slug (sentry-cli projects -o witty-works list), keep empty of sentry is not used
+* line 2 (sentry organization): Name of the sentry organization, keep empty of sentry is not used
+* line 3 (sentry slug): Name of the sentry slug (`sentry-cli projects -o [organization name] list`), keep empty of sentry is not used
 
 fe.
 
 ```
 app/main.py
+foo-bar
 nlp-api
 ```
 
