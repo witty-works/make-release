@@ -8,14 +8,14 @@ VERSION_FILENAME=$(sed -n '1p' make-release)
 SENTRY_SLUG=$(sed -n '2p' make-release)
 
 case $1 in
-    release|major|hotfix)
+    major|minor|patch|hotfix)
         MODE=$1;
         echo "Preparing $MODE, stashing changes and updating develop/master";
 
         git stash;
-        git checkout develop;
+        git checkout dev;
         git pull --rebase;
-        git checkout master;
+        git checkout main;
         git pull --rebase;
 
         PREV_VERSION=$(git tag | head -n 1);
@@ -34,17 +34,25 @@ case $1 in
 
         case $MODE in
             major)
-                MODE='release';
+                TYPE='release';
                 MAJOR=${BASH_REMATCH[1]}+1;
                 MINOR=0;
                 PATCH=0;
             ;;
-            release)
+            minor)
+                TYPE='release';
                 MAJOR=${BASH_REMATCH[1]};
                 MINOR=${BASH_REMATCH[2]}+1;
                 PATCH=0;
             ;;
+            patch)
+                TYPE='release';
+                MAJOR=${BASH_REMATCH[1]};
+                MINOR=${BASH_REMATCH[2]};
+                PATCH=${BASH_REMATCH[3]}+1;
+            ;;
             hotfix)
+                TYPE='hotfix';
                 MAJOR=${BASH_REMATCH[1]};
                 MINOR=${BASH_REMATCH[2]};
                 PATCH=${BASH_REMATCH[3]}+1;
@@ -55,11 +63,17 @@ case $1 in
 
         set -x
 
-        git flow $MODE start $VERSION;
-        if [[ -z $SENTRY_PROJECT ]]
+        git flow $TYPE start $VERSION;
+
+        set +x
+        if [ ! -z "$SENTRY_SLUG" ]
         then
+            set -x
             sentry-cli releases new -p $SENTRY_SLUG $VERSION;
+            set +x
         fi
+        set -x
+
         sed "s/$PREV_VERSION/$VERSION/" $VERSION_FILENAME > "${VERSION_FILENAME}.bak"
         mv "${VERSION_FILENAME}.bak" $VERSION_FILENAME
         git stash pop;
@@ -81,7 +95,7 @@ case $1 in
 
         set -x
 
-        git flow $MODE finish $VERSION;
+        git flow $TYPE finish $VERSION;
     ;;
 
     finalize)
@@ -91,14 +105,18 @@ case $1 in
         set -x
 
         git push origin master develop --tags;
-        if [[ -z $SENTRY_PROJECT ]]
+
+        set +x
+        if [ ! -z "$SENTRY_SLUG" ]
         then
+            set -x
             sentry-cli releases finalize $VERSION;
             sentry-cli releases set-commits $VERSION --commit "Witty Works $SENTRY_SLUG / @$PREV_VERSION..$VERSION";
+            set +x
         fi
     ;;
 
     *)
-        echo "./make-release.sh [release|major|hotfix|finish|finalize]";
+        echo "./make-release.sh [major|minor|patch|hotfix|finish|finalize]";
    ;;
 esac
