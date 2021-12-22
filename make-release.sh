@@ -10,7 +10,7 @@ SENTRY_SLUG=$(sed -n '2p' make-release)
 case $1 in
     major|minor|patch|hotfix)
         MODE=$1;
-        echo "Preparing $MODE, stashing changes and updating develop/master";
+        echo "Preparing $MODE, stashing changes and updating dev/main";
 
         git stash;
         git checkout dev;
@@ -104,7 +104,7 @@ case $1 in
 
         set -x
 
-        git push origin master develop --tags;
+        git push origin main dev --tags;
 
         set +x
         if [ ! -z "$SENTRY_SLUG" ]
