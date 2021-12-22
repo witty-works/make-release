@@ -8,6 +8,23 @@ VERSION_FILENAME=$(sed -n '1p' make-release)
 SENTRY_ORG=$(sed -n '2p' make-release)
 SENTRY_SLUG=$(sed -n '3p' make-release)
 
+echo "Updating '$VERSION_FILENAME'.";
+
+if [ ! -z "$SENTRY_ORG" ]
+then
+    if [ ! -z "$SENTRY_SLUG" ]
+    then
+            echo "Updating sentry release for project '$SENTRY_SLUG' on '$SENTRY_ORG' organization.";
+    fi
+elif [ ! -z "$SENTRY_SLUG" ]
+then
+    echo "Please either add a sentry org into the 2nd line or remove the sentry project '$SENTRY_SLUG' from the 3rd line.";
+
+    exit;
+else
+    echo "Not updating sentry since there is no sentry organization on the 2nd line and a slug on the 3rd line";
+fi
+
 case $1 in
     major|minor|patch|hotfix)
         MODE=$1;
