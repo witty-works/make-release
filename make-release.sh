@@ -128,8 +128,8 @@ case $1 in
         if [ ! -z "$SENTRY_SLUG" ]
         then
             set -x
-            sentry-cli releases finalize $VERSION;
-            sentry-cli releases set-commits $VERSION --commit "Witty Works $SENTRY_SLUG / @$PREV_VERSION..$VERSION";
+            sentry-cli releases -o $SENTRY_ORG finalize $VERSION;
+            sentry-cli releases -o $SENTRY_ORG set-commits $VERSION --commit "$SENTRY_ORG/$SENTRY_SLUG@$PREV_VERSION..$VERSION";
             set +x
         fi
     ;;
