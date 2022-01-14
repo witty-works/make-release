@@ -45,7 +45,7 @@ make-release.sh major
 To start a minor release
 
 ```
-make-release.sh release
+make-release.sh minor
 ```
 
 To start a patch release
