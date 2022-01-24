@@ -5,12 +5,7 @@ Make a release by determining the next version, updating the version in the code
 ## Requirements
 
 * `git flow init` was run with `dev` and `main` as the development and production branches
-* `.gitconfig` needs to contain the following
-
-```
-[tag]
-        sort = -version:refname
-```
+* run `git config --global tag.sort -version:refname`
 
 ## Configuration
 
