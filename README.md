@@ -2,6 +2,9 @@
 
 Make a release by determining the next version, updating the version in the code/config, update sentry and push the release.
 
+It builds on the command line tool for git flow:
+https://nvie.com/posts/a-successful-git-branching-model/
+
 ## Requirements
 
 * `git flow init` was run with `dev` and `main` as the development and production branches
