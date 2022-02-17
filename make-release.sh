@@ -28,9 +28,8 @@ fi
 case $1 in
     major|minor|patch|hotfix)
         MODE=$1;
-        echo "Preparing $MODE, stashing changes and updating dev/main";
-
-        git stash;
+        echo "Preparing $MODE updating dev/main, fetching all tags";
+        git fetch --tags
         git checkout dev;
         git pull --rebase;
         git checkout main;
@@ -94,7 +93,6 @@ case $1 in
 
         sed "s/$PREV_VERSION/$VERSION/" $VERSION_FILENAME > "${VERSION_FILENAME}.bak"
         mv "${VERSION_FILENAME}.bak" $VERSION_FILENAME
-        git stash pop;
     ;;
 
     finish)

@@ -17,7 +17,7 @@ Put this file into your PATH.
 Note: Best is to create a symlink to make it easy to keep the file updated.
 
 ```
-sudo ln -s ../make-release/make-release.sh /usr/local/bin/make-release.s
+sudo ln -s [ABSOLUTE_PATH]/make-release/make-release.sh /usr/local/bin/make-release.sh
 ```
 
 Add a "make-release" file into each repository where you want to use make-release.sh with the following contents:
@@ -55,7 +55,7 @@ make-release.sh minor
 To start a patch release
 
 ```
-make-release.sh hotfix
+make-release.sh patch
 ```
 
 ### Finish the release
