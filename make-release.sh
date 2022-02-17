@@ -28,8 +28,7 @@ fi
 case $1 in
     major|minor|patch|hotfix)
         MODE=$1;
-        echo "Preparing $MODE updating dev/main, fetching all tags";
-        git fetch --tags
+        echo "Preparing $MODE updating dev/main";
         git checkout dev;
         git pull --rebase;
         git checkout main;
