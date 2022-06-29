@@ -2,11 +2,23 @@
 
 set -e;
 
-VERSION_REGEXP='([0-9]+)\.([0-9]+)\.([0-9]+)';
+VERSION_REGEXP='([0-9]+)\.([0-9]+)\.([0-9]+)(\.([0-9]+))?';
 
 VERSION_FILENAME=$(sed -n '1p' make-release)
 SENTRY_ORG=$(sed -n '2p' make-release)
 SENTRY_SLUG=$(sed -n '3p' make-release)
+
+Help()
+{
+   # Display Help
+   echo "Make a release."
+   echo
+   echo "Syntax: make-release.sh [-h|-r=SOME-INTEGER] [major|minor|patch|hotfix|finish|finalize]"
+   echo "options:"
+   echo "-h   Output the help information"
+   echo "-r   Make a release candidate with the number supplied, ie. -r2 will add RC2 to the version"
+   echo
+}
 
 echo "Updating '$VERSION_FILENAME'.";
 
@@ -25,10 +37,22 @@ else
     echo "Not updating sentry since there is no sentry organization on the 2nd line and a slug on the 3rd line";
 fi
 
+while getopts "hr:" opt; do
+    case ${opt} in
+    r )
+        RC=$OPTARG
+        shift;;
+    h )
+        Help
+        exit 1
+        ;;
+    esac
+done
+
 case $1 in
     major|minor|patch|hotfix)
         MODE=$1;
-        echo "Preparing $MODE updating dev/main";
+        echo "Preparing '$MODE' updating dev/main";
         git checkout dev;
         git pull --rebase;
         git checkout main;
@@ -77,6 +101,11 @@ case $1 in
 
         VERSION="$MAJOR.$MINOR.$PATCH";
 
+        if [ ! -z "$RC" ]
+        then
+            VERSION="$VERSION.$RC"
+        fi
+
         set -x
 
         git flow $TYPE start $VERSION;
@@ -100,7 +129,7 @@ case $1 in
 
         if [[ ! $BRANCH =~ $REGEXP ]];
         then
-            echo "Please make sure you are currently on release or hotfix branch, ie. a branch named 'release|hotfix/x.y.x'";
+            echo "Please make sure you are currently on release or hotfix branch, ie. a branch named 'release|hotfix/x.y.z[.RC]' f.e. release/1.22.3";
 
             exit;
         fi
@@ -132,6 +161,6 @@ case $1 in
     ;;
 
     *)
-        echo "./make-release.sh [major|minor|patch|hotfix|finish|finalize]";
+        Help
    ;;
 esac
