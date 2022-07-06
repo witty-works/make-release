@@ -2,7 +2,7 @@
 
 set -e;
 
-VERSION_REGEXP='([0-9]+)\.([0-9]+)\.([0-9]+)(\.([0-9]+))?';
+VERSION_REGEXP='([0-9]+)\.([0-9]+)\.([0-9]+)\.?([0-9]+)?';
 
 VERSION_FILENAME=$(sed -n '1p' make-release)
 SENTRY_ORG=$(sed -n '2p' make-release)
@@ -13,10 +13,9 @@ Help()
    # Display Help
    echo "Make a release."
    echo
-   echo "Syntax: make-release.sh [-h|-r=SOME-INTEGER] [major|minor|patch|hotfix|finish|finalize]"
+   echo "Syntax: make-release.sh [-h|-r=SOME-INTEGER] [major|minor|patch|hotfix|rc|finish|finalize]"
    echo "options:"
    echo "-h   Output the help information"
-   echo "-r   Make a release candidate with the number supplied, ie. -r2 will add RC2 to the version"
    echo
 }
 
@@ -39,9 +38,6 @@ fi
 
 while getopts "hr:" opt; do
     case ${opt} in
-    r )
-        RC=$OPTARG
-        shift;;
     h )
         Help
         exit 1
@@ -50,7 +46,7 @@ while getopts "hr:" opt; do
 done
 
 case $1 in
-    major|minor|patch|hotfix)
+    major|minor|patch|hotfix|rc)
         MODE=$1;
         echo "Preparing '$MODE' updating dev/main";
         git checkout dev;
@@ -60,7 +56,7 @@ case $1 in
 
         PREV_VERSION=$(git tag | head -n 1);
 
-        REGEXP="^$VERSION_REGEXP+$";
+        REGEXP="^$VERSION_REGEXP$";
         if [[ ! $PREV_VERSION =~ $REGEXP ]];
         then
             echo "Previous version should be in the format x.y.z and not '$PREV_VERSION'.";
@@ -71,6 +67,7 @@ case $1 in
         declare -i MAJOR;
         declare -i MINOR;
         declare -i PATCH;
+        declare -i RC;
 
         case $MODE in
             major)
@@ -96,6 +93,13 @@ case $1 in
                 MAJOR=${BASH_REMATCH[1]};
                 MINOR=${BASH_REMATCH[2]};
                 PATCH=${BASH_REMATCH[3]}+1;
+            ;;
+            rc)
+                TYPE='release';
+                MAJOR=${BASH_REMATCH[1]};
+                MINOR=${BASH_REMATCH[2]};
+                PATCH=${BASH_REMATCH[3]};
+                RC=${BASH_REMATCH[5]}+1;
             ;;
         esac
 
