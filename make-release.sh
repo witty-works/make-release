@@ -13,7 +13,7 @@ Help()
    # Display Help
    echo "Make a release."
    echo
-   echo "Syntax: make-release.sh [-h|-r=SOME-INTEGER] [major|minor|patch|hotfix|rc|finish|finalize]"
+   echo "Syntax: make-release.sh [-h] [major|minor|patch|hotfix|rc|finish|finalize]"
    echo "options:"
    echo "-h   Output the help information"
    echo
@@ -99,7 +99,7 @@ case $1 in
                 MAJOR=${BASH_REMATCH[1]};
                 MINOR=${BASH_REMATCH[2]};
                 PATCH=${BASH_REMATCH[3]};
-                RC=${BASH_REMATCH[5]}+1;
+                RC=${BASH_REMATCH[4]}+1;
             ;;
         esac
 
