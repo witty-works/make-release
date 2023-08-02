@@ -7,6 +7,8 @@ VERSION_REGEXP='([0-9]+)\.([0-9]+)\.([0-9]+)\.?([0-9]+)?';
 VERSION_FILENAME=$(sed -n '1p' make-release)
 SENTRY_ORG=$(sed -n '2p' make-release)
 SENTRY_SLUG=$(sed -n '3p' make-release)
+BUILD_COMMAND=$(sed -n '4p' make-release)
+BUILD_PATH=$(sed -n '5p' make-release)
 
 Help()
 {
@@ -26,6 +28,22 @@ then
     if [ ! -z "$SENTRY_SLUG" ]
     then
             echo "Updating sentry release for project '$SENTRY_SLUG' on '$SENTRY_ORG' organization.";
+
+            if [ ! -z "$BUILD_COMMAND" ]
+            then
+                if [ ! -z "$BUILD_PATH" ]
+                then
+                        echo "Generating sourcemaps after building '$BUILD_COMMAND' into '$BUILD_PATH'.";
+                fi
+            elif [ ! -z "$BUILD_PATH" ]
+            then
+                echo "Please either add a build command into the 4th line or remove the build path '$BUILD_PATH' from the 5th line.";
+
+                exit;
+            else
+                echo "Not updating sourcemaps to sentry since there is no build command and build path set.";
+            fi
+
     fi
 elif [ ! -z "$SENTRY_SLUG" ]
 then
@@ -33,7 +51,7 @@ then
 
     exit;
 else
-    echo "Not updating sentry since there is no sentry organization on the 2nd line and a slug on the 3rd line";
+    echo "Not updating sentry since there is no sentry organization set.";
 fi
 
 while getopts "hr:" opt; do
@@ -140,6 +158,15 @@ case $1 in
 
         TYPE=${BASH_REMATCH[1]};
         VERSION=${BASH_REMATCH[2]};
+
+        if [ ! -z "$BUILD_COMMAND" ]
+        then
+            set -x
+            eval "$BUILD_COMMAND"
+            sentry-cli sourcemaps inject --org $SENTRY_ORG --project $SENTRY_SLUG $BUILD_PATH
+            sentry-cli sourcemaps upload --org $SENTRY_ORG --project $SENTRY_SLUG $BUILD_PATH --release $VERSION
+            set +x
+        fi
 
         set -x
 
