@@ -25,6 +25,8 @@ Add a "make-release" file into each repository where you want to use make-releas
 * line 1 (version file name): The file name where the version number is tracked
 * line 2 (sentry organization): Name of the sentry organization, keep empty of sentry is not used
 * line 3 (sentry slug): Name of the sentry slug (`sentry-cli projects -o [organization name] list`), keep empty of sentry is not used
+* line 4 (build command): Command to run to build the project, keep empty if sourcemaps are not uploaded during tagging
+* line 5 (build path): Relative path for where the build command geneerates the .map files
 
 fe.
 
@@ -32,6 +34,8 @@ fe.
 app/main.py
 foo-bar
 nlp-api
+npm run build
+./dist
 ```
 
 ## Usage
