@@ -4,7 +4,7 @@ set -e;
 
 VERSION_REGEXP='([0-9]+)\.([0-9]+)\.([0-9]+)\.?([0-9]+)?';
 
-VERSION_FILENAME=$(sed -n '1p' make-release)
+VERSION_FILENAMES=$(sed -n '1p' make-release)
 SENTRY_ORG=$(sed -n '2p' make-release)
 SENTRY_SLUG=$(sed -n '3p' make-release)
 BUILD_COMMAND=$(sed -n '4p' make-release)
@@ -21,7 +21,7 @@ Help()
    echo
 }
 
-echo "Updating '$VERSION_FILENAME'.";
+echo "Updating version files: $VERSION_FILENAMES";
 
 if [ ! -z "$SENTRY_ORG" ]
 then
@@ -141,8 +141,20 @@ case $1 in
         fi
         set -x
 
-        sed "s/$PREV_VERSION/$VERSION/" $VERSION_FILENAME > "${VERSION_FILENAME}.bak"
-        mv "${VERSION_FILENAME}.bak" $VERSION_FILENAME
+        # hyphen (-) is set as delimiter
+        IFS=','
+
+        # str is read into an array as tokens separated by IFS
+        read -ra values <<< "$VERSION_FILENAMES"
+
+        #echo each of the value to output
+        for VERSION_FILENAME in "${values[@]}"; do
+            sed "s/$PREV_VERSION/$VERSION/" $VERSION_FILENAME > "${VERSION_FILENAME}.bak"
+            mv "${VERSION_FILENAME}.bak" $VERSION_FILENAME
+        done
+
+        # reset IFS to default value
+        IFS=' '
     ;;
 
     finish)

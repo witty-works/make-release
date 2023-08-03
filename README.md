@@ -22,7 +22,7 @@ sudo ln -s [ABSOLUTE_PATH]/make-release/make-release.sh /usr/local/bin/make-rele
 
 Add a "make-release" file into each repository where you want to use make-release.sh with the following contents:
 
-* line 1 (version file name): The file name where the version number is tracked
+* line 1 (version file name): The file name where the version number is tracked (comma separated list)
 * line 2 (sentry organization): Name of the sentry organization, keep empty of sentry is not used
 * line 3 (sentry slug): Name of the sentry slug (`sentry-cli projects -o [organization name] list`), keep empty of sentry is not used
 * line 4 (build command): Command to run to build the project, keep empty if sourcemaps are not uploaded during tagging
