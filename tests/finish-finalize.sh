@@ -105,6 +105,10 @@ git fetch -q origin
 git merge-base --is-ancestor "$MERGE" origin/dev || fail "dev does not contain the release"
 git log --format=%s origin/dev | grep -qx "Work on dev" || fail "dev lost its own work"
 [ "$(git branch --show-current)" = dev ] || fail "finalize did not leave the clone on dev"
+# Sentry gets the commits from the GitHub repository, not from a repository
+# named after the Sentry organisation.
+grep -qx -- "releases -o example-sentry-org set-commits 2.0.0-rc1 --commit example-gh/example-repo@1.42.9..2.0.0-rc1" "$SENTRY_LOG" \
+    || fail "set-commits named the wrong repository: $(grep set-commits "$SENTRY_LOG")"
 
 if [ "$FAILED" = 0 ]; then echo "All finish/finalize checks passed."; fi
 exit "$FAILED"

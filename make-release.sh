@@ -278,7 +278,10 @@ case $1 in
         then
             set -x
             sentry-cli releases -o $SENTRY_ORG finalize $VERSION;
-            sentry-cli releases -o $SENTRY_ORG set-commits $VERSION --commit "$SENTRY_ORG/$SENTRY_SLUG@$PREV_VERSION..$VERSION";
+            # The repository as Sentry's GitHub integration names it, owner/name
+            # on GitHub; the Sentry organisation may be named differently.
+            REPOSITORY=$(gh repo view --json nameWithOwner --jq .nameWithOwner);
+            sentry-cli releases -o $SENTRY_ORG set-commits $VERSION --commit "$REPOSITORY@$PREV_VERSION..$VERSION";
             set +x
         fi
     ;;
