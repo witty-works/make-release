@@ -8,7 +8,6 @@ https://nvie.com/posts/a-successful-git-branching-model/
 ## Requirements
 
 * `git flow init` was run with `dev` and `main` as the development and production branches
-* run `git config --global tag.sort -version:refname`
 
 ## Configuration
 
@@ -61,6 +60,40 @@ To start a patch release
 ```
 make-release.sh patch
 ```
+
+To start a hotfix, from `main`
+
+```
+make-release.sh hotfix
+```
+
+### Release candidates
+
+A release candidate is tagged `x.y.z-rcN`. The first one names the release it leads to; each later one counts on:
+
+```
+make-release.sh rc major   # after 1.42.9: release/2.0.0-rc1
+make-release.sh rc         # after 2.0.0-rc1: release/2.0.0-rc2
+make-release.sh major      # after 2.0.0-rc2: release/2.0.0, the release itself
+```
+
+`finish` and `finalize` work as for a release. `major`, `minor`, `patch` and `hotfix` always count from the last release, not from a candidate.
+
+To see which version a command would start, without changing anything:
+
+```
+make-release.sh next rc major
+```
+
+The tags are sorted by version, with a release after its candidates, whatever `tag.sort` is set to. Tags in other forms (`v3`, `1.42.9.1`) are left out.
+
+## Tests
+
+```
+tests/next-version.sh
+```
+
+checks the versions `next` computes, in throwaway repositories. It needs only `git` and `bash`.
 
 ### Finish the release
 
