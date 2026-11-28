@@ -8,6 +8,8 @@ https://nvie.com/posts/a-successful-git-branching-model/
 ## Requirements
 
 * `git flow init` was run with `dev` and `main` as the development and production branches
+* the GitHub CLI `gh`, signed in with an account that can open and merge pull requests and push tags
+* the repository allows merge commits for pull requests
 
 ## Configuration
 
@@ -87,26 +89,35 @@ make-release.sh next rc major
 
 The tags are sorted by version, with a release after its candidates, whatever `tag.sort` is set to. Tags in other forms (`v3`, `1.42.9.1`) are left out.
 
-## Tests
-
-```
-tests/next-version.sh
-```
-
-checks the versions `next` computes, in throwaway repositories. It needs only `git` and `bash`.
-
 ### Finish the release
 
-Commit the change to the version file and any other release preparations.
+Commit the change to the version file and any other release preparations, then, on the release or hotfix branch:
 
 ```
 make-release.sh finish
 ```
 
+This pushes the branch and opens a pull request into `main`; it merges nothing itself. `main` can then require a pull request and passing checks, for administrators too, without needing a second person to approve: the pull request needs no approval, only the checks.
+
+Merge the pull request on GitHub once the checks pass, **with a merge commit**. A squash or rebase merge leaves the release's commits off `main`, and `finalize` refuses it.
+
 ### Finalize the release
 
-Push the release inclusing tags as well as finalize the release on sentry of a sentry slug is set
+Still on the release or hotfix branch:
 
 ```
 make-release.sh finalize
 ```
+
+This checks that the pull request is merged, tags the merge commit (the editor opens for the tag message, for instance to add the milestone URL), pushes the tag, merges the tag into `dev` and pushes `dev`, and deletes the local branch. If a sentry slug is set, it also finalizes the release on sentry.
+
+If merging into `dev` conflicts, `finalize` stops after pushing the tag: resolve the conflict, commit, push `dev`, and finalize the sentry release by hand.
+
+## Tests
+
+```
+tests/next-version.sh
+tests/finish-finalize.sh
+```
+
+`next-version.sh` checks the versions `next` computes, and `finish-finalize.sh` runs `finish` and `finalize` against a throwaway origin with a stand-in for `gh`. Both use throwaway repositories and need only `git` and `bash`.

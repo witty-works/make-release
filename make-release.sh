@@ -84,6 +84,24 @@ NextVersion()
     fi
 }
 
+# Sets BRANCH, TYPE and VERSION from the release or hotfix branch checked
+# out, or stops.
+ReleaseBranch()
+{
+    BRANCH=$(git branch --show-current);
+    local REGEXP="^(release|hotfix)/($VERSION_REGEXP)$";
+
+    if [[ ! $BRANCH =~ $REGEXP ]];
+    then
+        echo "Please make sure you are currently on release or hotfix branch, ie. a branch named 'release|hotfix/x.y.z[-rcN]' f.e. release/1.22.3 or release/2.0.0-rc1";
+
+        exit 1;
+    fi
+
+    TYPE=${BASH_REMATCH[1]};
+    VERSION=${BASH_REMATCH[2]};
+}
+
 echo "Updating version files: $VERSION_FILENAMES";
 
 if [ ! -z "$SENTRY_ORG" ]
@@ -186,18 +204,14 @@ case $1 in
     ;;
 
     finish)
-        BRANCH=$(git branch --show-current);
-        REGEXP="^(release|hotfix)/($VERSION_REGEXP)$";
+        ReleaseBranch;
 
-        if [[ ! $BRANCH =~ $REGEXP ]];
+        if ! git diff --quiet HEAD;
         then
-            echo "Please make sure you are currently on release or hotfix branch, ie. a branch named 'release|hotfix/x.y.z[-rcN]' f.e. release/1.22.3 or release/2.0.0-rc1";
+            echo "Please commit the release preparations first: '$BRANCH' has uncommitted changes.";
 
-            exit;
+            exit 1;
         fi
-
-        TYPE=${BASH_REMATCH[1]};
-        VERSION=${BASH_REMATCH[2]};
 
         if [ ! -z "$BUILD_COMMAND" ]
         then
@@ -208,20 +222,58 @@ case $1 in
             set +x
         fi
 
+        # main takes changes only through a pull request, after CI: open
+        # one instead of merging here.
         set -x
 
-        git flow $TYPE finish $VERSION;
+        git push -u origin "$BRANCH";
+        gh pr create --base main --head "$BRANCH" \
+            --title "$TYPE $VERSION" \
+            --body "Merge with a merge commit, not squash or rebase, once the checks pass; then run \`make-release.sh finalize\` on \`$BRANCH\`, which tags the merge and brings it into dev.";
+
+        set +x
+        echo "Once the pull request is merged, run 'make-release.sh finalize' on '$BRANCH'.";
     ;;
 
     finalize)
-        VERSION=$(VersionTags | head -n 1);
-        PREV_VERSION=$(VersionTags | sed -n '2p');
+        ReleaseBranch;
+
+        read -r STATE MERGE_COMMIT <<< "$(gh pr view "$BRANCH" --json state,mergeCommit --jq '.state + " " + (.mergeCommit.oid // "")')";
+
+        if [ "$STATE" != "MERGED" ];
+        then
+            echo "The pull request for '$BRANCH' is not merged (${STATE:-not found}); merge it first.";
+
+            exit 1;
+        fi
+
+        git fetch origin --tags;
+
+        # A squash or rebase leaves the release's commits off main, and
+        # bringing main into dev would then repeat them.
+        if ! git merge-base --is-ancestor "$BRANCH" "$MERGE_COMMIT";
+        then
+            echo "The pull request for '$BRANCH' was not merged with a merge commit, so its commits are not on main. Tag and merge into dev by hand.";
+
+            exit 1;
+        fi
 
         set -x
 
-        git push origin main dev --tags;
+        git tag -a "$VERSION" -e -m "$VERSION" "$MERGE_COMMIT";
+        git push origin "refs/tags/$VERSION";
+
+        git checkout dev;
+        git merge --ff-only origin/dev;
+        git merge --no-ff -m "Merge tag '$VERSION' into dev" "$VERSION";
+        git push origin dev;
+
+        git branch -D "$BRANCH";
 
         set +x
+
+        PREV_VERSION=$(VersionTags | grep -vx -- "$VERSION" | head -n 1);
+
         if [ ! -z "$SENTRY_SLUG" ]
         then
             set -x
